@@ -10,30 +10,34 @@
 (define (add-client univ client)
   (local ((define univ* (append univ (list client))))
     (make-bundle univ*
-                 (list (make-mail client "welcome"))
+                 (list (make-mail client "welcome to the chativerse"))
                  empty)))
 
 ; an obvious example for adding a world:
 (check-expect
   (add-client '() iworld1)
   (make-bundle (list iworld1)
-               (list (make-mail iworld1 "welcome"))
+               (list (make-mail iworld1 "welcome to the chativerse"))
                '()))
      
 ; UniverseState iworld? W2U -> Bundle
 ; next list of worlds when world iw is sending message m to
 ; the universe in state s
 (define (process univ client msg)
+  (local ((define other-worlds
+            (filter (λ (c) (not (string=? (iworld-name client)
+                                           (iworld-name c))))
+                    univ))
+          (define msg* (string-append (iworld-name client) ": " msg)))
   (make-bundle univ
-               (map (λ (w) (make-mail w msg)) univ)
-               empty))
+               (map (λ (w) (make-mail w msg*)) other-worlds)
+               empty)))
 
 (check-expect
  (process (list iworld1 iworld2 iworld3) iworld1 "hello")
  (make-bundle (list iworld1 iworld2 iworld3)
-              (list (make-mail iworld1 "hello")
-                    (make-mail iworld2 "hello")
-                    (make-mail iworld3 "hello"))
+              (list (make-mail iworld2 "iworld1: hello")
+                    (make-mail iworld3 "iworld1: hello"))
               empty))
 
 (define go!
